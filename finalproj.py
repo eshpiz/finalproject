@@ -42,21 +42,20 @@ def make_request_using_cache(url):
 
 
 class TopMovies:
-  def __init__(self, rank, title, year, site_url=None):
+  def __init__(self, rank, title, year, movie_url=None):
     self.rank = rank
     self.title = title
     self.year = year
-    self.url = site_url
+    self.url = movie_url
 
-    if site_url == None:
-      self.user_rating = " "
+    if movie_url == None:
       self.director = " "
       self.content_rating = " "
       self.length = " "
       self.genre = " "
 
     else:
-      html3 = make_request_using_cache(site_url)
+      html3 = make_request_using_cache(movie_url)
       page_soup = BeautifulSoup(html3, 'html.parser')
       data = page_soup.find('div',id="main_top")
       self.director = data.find('span', itemprop="director")
@@ -81,12 +80,35 @@ def get_movie_data():
       if len(table_titles) == 5:
           titles = table_titles[1].text.strip().split(DELIMITER)
           titles_list.append(titles)
-  #print(titles_list)
   return titles_list
+
+def get_more_movie_data():
+  url = 'http://www.imdb.com/chart/top?ref_=nv_mv_250_6'
+  html = make_request_using_cache(url)
+  soup2 = BeautifulSoup(html, 'html.parser')
+  base_url = 'http://www.imdb.com/'
+
+  menu = soup2.find(class_="lister-list")
+  title_col = menu.find_all(class_="titleColumn")
+  #print(title_col)
+  url_list = []
+  for x in title_col:
+    movie_url = base_url + x.a['href']
+    url_list.append(movie_url)
+  print(url_list)
+  return(url_list)
+
+
+get_more_movie_data()
+
+
 
 movie_class = []
 for movie in get_movie_data():
   movie_class += [TopMovies(movie[0], movie[1], movie[2])]
+# for x in get_more_movie_data():
+#   movie_class += [TopMovies(x[3])]
+
 #
 # movies_dict = {}
 # for title in get_movie_data():
@@ -101,7 +123,6 @@ except:
   None
 # for x in movie_class:
 #   print(x)
-
 
 conn = sqlite3.connect('movies.db')
 cur = conn.cursor()
@@ -131,10 +152,25 @@ for x in movie_class:
 conn.commit()
 conn.close()
 
+
 conn = sqlite3.connect('movies.db')
 cur = conn.cursor()
 statement = ''' UPDATE Movies
     SET Title = LTRIM(Title)'''
 cur.execute(statement)
+# conn.commit()
+# conn.close()
+
+# conn = sqlite3.connect('movies.db')
+# cur = conn.cursor()
+statement1 = ''' ALTER TABLE Movies
+    ADD Director TEXT'''
+cur.execute(statement1)
+
+# statement2 = ''' INSERT INTO Movies (Director)
+#   VALUES (?) '''
+# data = (x['director'])
+# cur.execute(statement2, data)
+
 conn.commit()
 conn.close()
