@@ -103,6 +103,8 @@ get_more_movie_data()
 
 
 
+
+
 movie_class = []
 for movie in get_movie_data():
   movie_class += [TopMovies(movie[0], movie[1], movie[2])]
@@ -152,20 +154,30 @@ for x in movie_class:
 conn.commit()
 conn.close()
 
-
+# Deletes white space in title column
 conn = sqlite3.connect('movies.db')
 cur = conn.cursor()
 statement = ''' UPDATE Movies
     SET Title = LTRIM(Title)'''
 cur.execute(statement)
-# conn.commit()
-# conn.close()
 
-# conn = sqlite3.connect('movies.db')
-# cur = conn.cursor()
+# Adding director, contentrating, length, and genre to table
 statement1 = ''' ALTER TABLE Movies
     ADD Director TEXT'''
 cur.execute(statement1)
+
+statement2 = ''' ALTER TABLE Movies
+    ADD ContentRating TEXT'''
+cur.execute(statement2)
+
+statement3 = ''' ALTER TABLE Movies
+    ADD Length INTEGER'''
+cur.execute(statement3)
+
+statement4 = ''' ALTER TABLE Movies
+    ADD Genre TEXT'''
+cur.execute(statement4)
+
 
 # statement2 = ''' INSERT INTO Movies (Director)
 #   VALUES (?) '''
