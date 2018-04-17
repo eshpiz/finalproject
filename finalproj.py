@@ -59,8 +59,12 @@ class TopMovies:
       page_soup = BeautifulSoup(html3, 'html.parser')
       data = page_soup.find('div',id="main_top")
       self.director = data.find('span', itemprop="director").text
-      self.content_rating = data.find('meta', itemprop="contentRating").text
+      # try:
+      #   self.content_rating = data.find('meta', itemprop="contentRating").text
+      # except:
+      #   self.content_rating = None
       self.length = data.find('time', itemprop="duration").text
+
       #temp = data.find_all('span', itemprop="genre")
       temp = [link.string for link in data.find_all('span', itemprop="genre")]
       self.genre = ",".join(temp)
@@ -103,33 +107,29 @@ def get_more_movie_data():
 
 x = get_more_movie_data()
 
-
-
-
-
-movie_class = []
-counter = 0
-for movie in get_movie_data()[:10]:
-  movie_class += [TopMovies(movie[0], movie[1], movie[2], movie_url = x[counter])]
-  #movie_class[counter].movie_url = x[counter]
-  counter += 1
+#creates class
+def create_classes():
+  movie_class = []
+  counter = 0
+  for movie in get_movie_data():
+    movie_class += [TopMovies(movie[0], movie[1], movie[2], movie_url = x[counter])]
+    #movie_class[counter].movie_url = x[counter]
+    counter += 1
 #print(movie_class)
-for x in movie_class:
-  print(x.length)
-# for x in get_more_movie_data():
-#   movie_class += [TopMovies(x[3])]
-
-
-#put info in movie class
-try:
-  movies_dict = {}
-  for title in get_movie_data():
-    movies_dict[title[1]] = {'year':title[2], 'rank':title[0]}
-    #print(movies_dict)
-except:
-  None
 # for x in movie_class:
-#   print(x)
+#   print(x.content_rating)
+
+def create_objects():
+  #put info in movie class/ creates objects
+  try:
+    movies_dict = {}
+    for title in get_movie_data():
+      movies_dict[title[1]] = {'year':title[2], 'rank':title[0]}
+      #print(movies_dict)
+  except:
+    None
+  # for x in movie_class:
+  #   print(x)
 def create_table():
   conn = sqlite3.connect('movies.db')
   cur = conn.cursor()
@@ -141,7 +141,10 @@ def create_table():
       'Id' INTEGER PRIMARY KEY,
       'Rank' INTEGER NOT NULL,
       'Title' TEXT NOT NULL,
-      'Year' Integer
+      'Year' Integer,
+      'Director' TEXT,
+      'Length' TEXT,
+      'Genre' TEXT
   );
   '''
   cur.execute(statement)
@@ -150,39 +153,44 @@ def create_table():
   conn = sqlite3.connect('movies.db')
   cur = conn.cursor()
   for x in movie_class:
-      query = '''INSERT INTO Movies (Id, Rank, Title, Year) VALUES (?,?,?,?)
+      query = '''INSERT INTO Movies (Id, Rank, Title, Year, Director, Length, Genre) VALUES (?,?,?,?,?,?,?)
       '''
-      data = (None, x.rank, x.title, x.year)
+      data = (None, x.rank, x.title, x.year, x.director, x.length, x.genre)
       cur.execute(query, data)
   conn.commit()
   conn.close()
 
+
+
+
+  # adding info to table from scraped
+  # for x in movie_class:
+  #   statement2 = ''' INSERT INTO Movies (Director, Length, Genre) VALUES (?,?,?)
+  #   '''
+  #   data1 = (x.director, x.length, x.genre)
+  #   cur.execute(statement2, data1)
+
+
+
+def update_table():
   # Deletes white space in title column
   conn = sqlite3.connect('movies.db')
   cur = conn.cursor()
   statement = ''' UPDATE Movies
       SET Title = LTRIM(Title)'''
   cur.execute(statement)
-
-  # Adding director, contentrating, length, and genre to table
-  statement1 = ''' ALTER TABLE Movies
-      ADD Director TEXT'''
-  cur.execute(statement1)
-  statement2 = ''' ALTER TABLE Movies
-      ADD ContentRating TEXT'''
-  cur.execute(statement2)
-  statement3 = ''' ALTER TABLE Movies
-      ADD Length INTEGER'''
-  cur.execute(statement3)
-  statement4 = ''' ALTER TABLE Movies
-      ADD Genre TEXT'''
-  cur.execute(statement4)
-
-
-  # statement2 = ''' INSERT INTO Movies (Director)
-  #   VALUES (?) '''
-  # data = (x['director'])
-  # cur.execute(statement2, data)
-
   conn.commit()
   conn.close()
+
+def update_table_more():
+  conn = sqlite3.connect('movies.db')
+  cur = conn.cursor()
+  statement = '''UPDATE Movies
+    SET Length = LTRIM(RTRIM(Length))'''
+  cur.execute(statement)
+  conn.commit()
+  conn.close()
+
+update_table_more()
+# create_table()
+# update_table()
