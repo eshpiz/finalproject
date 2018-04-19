@@ -57,8 +57,7 @@ def interactive_search():
                 GROUP BY Director
                 ORDER BY COUNT(*) '''
             data_imdb = cur.execute(statement).fetchall()
-            print(data_imdb)
-            # response = input("Enter a command: ")
+            response = input("Enter a command: ")
 
             trace0 = go.Bar(
             x=[z[0] for z in data_imdb],
@@ -71,19 +70,71 @@ def interactive_search():
                 )
             ),
             opacity=0.6
+            )
+
+            data = [trace0]
+            layout = go.Layout(
+                title='Directors Grouped by the Number of Movies They Directed',
+            )
+
+            fig = go.Figure(data=data, layout=layout)
+            py.plot(fig, filename='text-hover-bar')
+            response = input("Enter a command: ")
+            continue
+
+        elif response.lower() == 'country':
+            statement = ''' SELECT Country, COUNT(*) FROM Movie_Info
+                GROUP BY Country
+                ORDER BY COUNT(*)'''
+            data_imdb = cur.execute(statement).fetchall()
+
+            labels = [z[0] for z in data_imdb]
+            values = [z[1] for z in data_imdb]
+            colors = ['#FEBFB3', '#E1396C', '#96D38C', '#D0F9B1']
+
+            trace = go.Pie(labels=labels, values=values,
+               hoverinfo='label+percent', textinfo='value',
+               textfont=dict(size=20),
+               marker=dict(colors=colors,
+                           line=dict(color='#000000', width=2)))
+
+            data = [trace]
+            layout = go.Layout(title = 'Countries Where Top 250 Movies Were Made')
+            fig = go.Figure(data=data, layout=layout)
+            py.plot(fig, filname='text-hover-bar')
+            response = input("Enter a command: ")
+            continue
+
+        elif response.lower() == 'year':
+            statement = ''' SELECT Year, COUNT(*) FROM Movies
+                GROUP BY Year
+                ORDER BY COUNT(*)'''
+            data_imdb = cur.execute(statement).fetchall()
+
+
+            trace0 = go.Bar(
+            x=[z[0] for z in data_imdb],
+            y=[z[1] for z in data_imdb],
+            text=[z[0] for z in data_imdb],
+            marker=dict(
+                color='rgb(158,202,225)',
+                line=dict(
+                    color='rgb(8,48,107)',
+                    width=1.5,
+                )
+            ),
+            opacity=0.6
         )
 
         data = [trace0]
         layout = go.Layout(
-            title='Directors Grouped by the Number of Movies They Directed',
+            title='Years the Top 250 Movies Were Made',
         )
 
         fig = go.Figure(data=data, layout=layout)
         py.plot(fig, filename='text-hover-bar')
         response = input("Enter a command: ")
-
-
-
+        continue
 
 
 if __name__ == '__main__':
