@@ -9,7 +9,6 @@ import sys
 
 
 #Caching top movies list
-
 try:
     cache_file = open('top_movies.json', 'r')
     cache_contents = cache_file.read()
@@ -53,21 +52,22 @@ class TopMovies:
       self.content_rating = " "
       self.length = " "
       self.genre = " "
+      self.country = "  "
 
     else:
       html3 = make_request_using_cache(movie_url)
       page_soup = BeautifulSoup(html3, 'html.parser')
       data = page_soup.find('div',id="main_top")
       self.director = data.find('span', itemprop="director").text
-      # try:
-      #   self.content_rating = data.find('meta', itemprop="contentRating").text
-      # except:
-      #   self.content_rating = None
       self.length = data.find('time', itemprop="duration").text
-
-      #temp = data.find_all('span', itemprop="genre")
       temp = [link.string for link in data.find_all('span', itemprop="genre")]
       self.genre = ",".join(temp)
+      bottom_info = page_soup.find(id="titleStoryLine")
+      self.storyline = bottom_info.find('div', class_="inline canwrap").text
+      more_data = page_soup.find(id="titleDetails")
+      table_info = more_data.find_all('div', class_="txt-block")[1]
+      self.country = table_info.find(itemprop="url").text
+
 
   def __str__(self):
     return (self.rank + self.title + self.year)
@@ -103,21 +103,14 @@ def get_more_movie_data():
     url_list.append(movie_url)
   #print(url_list)
   return(url_list)
-
-
 x = get_more_movie_data()
 
-#creates class
-def create_classes():
-  movie_class = []
-  counter = 0
-  for movie in get_movie_data():
-    movie_class += [TopMovies(movie[0], movie[1], movie[2], movie_url = x[counter])]
-    #movie_class[counter].movie_url = x[counter]
-    counter += 1
-#print(movie_class)
-# for x in movie_class:
-#   print(x.content_rating)
+movie_class = []
+counter = 0
+for movie in get_movie_data():
+  movie_class += [TopMovies(movie[0], movie[1], movie[2], movie_url = x[counter])]
+  counter += 1
+
 
 def create_objects():
   #put info in movie class/ creates objects
@@ -125,50 +118,61 @@ def create_objects():
     movies_dict = {}
     for title in get_movie_data():
       movies_dict[title[1]] = {'year':title[2], 'rank':title[0]}
-      #print(movies_dict)
   except:
     None
-  # for x in movie_class:
-  #   print(x)
+
+
 def create_table():
   conn = sqlite3.connect('movies.db')
   cur = conn.cursor()
   movies_drop = 'DROP TABLE IF EXISTS "Movies"'
+  movie_info_drop = 'DROP TABLE IF EXISTS "Movies_Info"'
   cur.execute(movies_drop)
+  cur.execute(movie_info_drop)
 
   #Create movies
   statement = ''' CREATE TABLE 'Movies' (
       'Id' INTEGER PRIMARY KEY,
       'Rank' INTEGER NOT NULL,
       'Title' TEXT NOT NULL,
-      'Year' Integer,
-      'Director' TEXT,
-      'Length' TEXT,
-      'Genre' TEXT
+      'Year' Integer
   );
   '''
   cur.execute(statement)
   conn.commit()
 
+  statement2 = ''' CREATE TABLE 'Movie_Info' (
+      'Id' INTEGER PRIMARY KEY,
+      'Rank' INTEGER NOT NULL,
+      'Director' TEXT,
+      'Length' TEXT,
+      'Genre' TEXT,
+      'Country' TEXT
+  );
+  '''
+  cur.execute(statement2)
+  conn.commit()
+  conn.close()
+
   conn = sqlite3.connect('movies.db')
   cur = conn.cursor()
   for x in movie_class:
-      query = '''INSERT INTO Movies (Id, Rank, Title, Year, Director, Length, Genre) VALUES (?,?,?,?,?,?,?)
+      query = '''INSERT INTO Movies (Id, Rank, Title, Year) VALUES (?,?,?,?)
       '''
-      data = (None, x.rank, x.title, x.year, x.director, x.length, x.genre)
+      data = (None, x.rank, x.title, x.year)
       cur.execute(query, data)
   conn.commit()
   conn.close()
 
-
-
-
-  # adding info to table from scraped
-  # for x in movie_class:
-  #   statement2 = ''' INSERT INTO Movies (Director, Length, Genre) VALUES (?,?,?)
-  #   '''
-  #   data1 = (x.director, x.length, x.genre)
-  #   cur.execute(statement2, data1)
+  conn = sqlite3.connect('movies.db')
+  cur = conn.cursor()
+  for x in movie_class:
+    query1 = ''' INSERT INTO Movie_Info (Id, Rank, Director, Length, Genre, Country) VALUES (?,?,?,?,?,?)
+    '''
+    data1 = (None, x.rank, x.director, x.length, x.genre, x.country)
+    cur.execute(query1, data1)
+  conn.commit()
+  conn.close
 
 
 
@@ -178,19 +182,25 @@ def update_table():
   cur = conn.cursor()
   statement = ''' UPDATE Movies
       SET Title = LTRIM(Title)'''
-  cur.execute(statement)
-  conn.commit()
-  conn.close()
 
-def update_table_more():
-  conn = sqlite3.connect('movies.db')
-  cur = conn.cursor()
-  statement = '''UPDATE Movies
+  statement2 = '''UPDATE Movies
     SET Length = LTRIM(RTRIM(Length))'''
   cur.execute(statement)
+  cur.execute(statement2)
+
+
+  update = '''UPDATE Movies
+      SET Rank = (
+      SELECT Rank
+      FROM Movie_Info
+      WHERE Movies.Rank = Movie_Info.Rank
+      )
+  '''
+  cur.execute(update)
   conn.commit()
   conn.close()
 
-update_table_more()
-# create_table()
-# update_table()
+
+
+create_table()
+update_table()
