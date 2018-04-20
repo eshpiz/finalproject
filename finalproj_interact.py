@@ -1,4 +1,4 @@
-# from finalproj.py import *
+#from finalproj.py import *
 import plotly
 import plotly.plotly as py
 import plotly.graph_objs as go
@@ -31,7 +31,7 @@ def interactive_search():
             '''
             data_imdb = cur.execute(statement).fetchall()
 
-            labels = [z[0].split()[0] for z in data_imdb]
+            labels = [z[0] for z in data_imdb]
             values = [z[1] for z in data_imdb]
             colors = ['#FEBFB3', '#E1396C', '#96D38C', '#D0F9B1']
 
@@ -55,32 +55,30 @@ def interactive_search():
         elif response.lower() == 'director':
             statement = ''' SELECT Director, COUNT(*) FROM Movie_Info
                 GROUP BY Director
-                ORDER BY COUNT(*) '''
+                ORDER BY COUNT(*)
+                '''
             data_imdb = cur.execute(statement).fetchall()
-            response = input("Enter a command: ")
 
-            trace0 = go.Bar(
-            x=[z[0] for z in data_imdb],
-            y=[z[1] for z in data_imdb],
-            marker=dict(
-                color='rgb(5,0,200)',
-                line=dict(
-                    color='rgb(8,48,107)',
-                    width=2,
+            trace = go.Bar(
+                x=[z[0] for z in data_imdb],
+                y=[z[1] for z in data_imdb],
+                marker=dict(
+                    color='rgb(5,0,200)',
+                    line=dict(color='rgb(8,48,107)', width=2
+                        )
+                    ),
+                    opacity=0.6
                 )
-            ),
-            opacity=0.6
-            )
 
-            data = [trace0]
+            data = [trace]
             layout = go.Layout(
-                title='Directors Grouped by the Number of Movies They Directed',
+                title='Directors Grouped by the Number of Movies They Directed'
             )
 
             fig = go.Figure(data=data, layout=layout)
             py.plot(fig, filename='text-hover-bar')
             response = input("Enter a command: ")
-            continue
+            # continue
 
         elif response.lower() == 'country':
             statement = ''' SELECT Country, COUNT(*) FROM Movie_Info
@@ -111,30 +109,35 @@ def interactive_search():
                 ORDER BY COUNT(*)'''
             data_imdb = cur.execute(statement).fetchall()
 
-
-            trace0 = go.Bar(
+            trace = go.Bar(
             x=[z[0] for z in data_imdb],
             y=[z[1] for z in data_imdb],
-            text=[z[0] for z in data_imdb],
             marker=dict(
                 color='rgb(158,202,225)',
                 line=dict(
                     color='rgb(8,48,107)',
                     width=1.5,
-                )
-            ),
-            opacity=0.6
-        )
+                    )
+                ),
+                opacity=0.6
+            )
 
-        data = [trace0]
-        layout = go.Layout(
-            title='Years the Top 250 Movies Were Made',
-        )
+            data = [trace]
+            layout = go.Layout(
+                title='Years the Top 250 Movies Were Made',
+            )
 
-        fig = go.Figure(data=data, layout=layout)
-        py.plot(fig, filename='text-hover-bar')
-        response = input("Enter a command: ")
-        continue
+            fig = go.Figure(data=data, layout=layout)
+            py.plot(fig, filename='text-hover-bar')
+            response = input("Enter a command: ")
+            continue
+
+        else:
+            print("Invalid command, please try again. ")
+            response = input("Enter a command: ")
+
+
+
 
 
 if __name__ == '__main__':

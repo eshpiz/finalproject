@@ -1,9 +1,24 @@
 
 Commands available:
 
-genre
-	Description: genres from the top 250 movies.
-	Prints: Gives user pie chart of the genres of the top 250 movies
-
 exit
 	Description: program is no longer executing
+
+genre
+	Description: genres from the top 250 movies
+	Prints: Gives user a pie chart of the genres of the top 250 movies
+
+country
+	Description: countries that the top 250 movies were made in
+	Prints: Gives the user a pie chart of the countries where the top 250 movies were created
+
+director
+	Description: directors of the top 250 movies
+	Prints: Gives the user a bar chart of the number of movies that each director directed in the top 250 movies
+
+year
+	Description: years that the top 250 movies were created
+	Prints: Gives the user a bar chart of the number of movies that were created each year
+
+help
+	Gives a list of possible commands and descriptions

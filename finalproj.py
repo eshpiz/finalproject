@@ -62,12 +62,9 @@ class TopMovies:
       self.length = data.find('time', itemprop="duration").text
       temp = [link.string for link in data.find_all('span', itemprop="genre")]
       self.genre = ",".join(temp)
-      bottom_info = page_soup.find(id="titleStoryLine")
-      self.storyline = bottom_info.find('div', class_="inline canwrap").text
-      more_data = page_soup.find(id="titleDetails")
-      table_info = more_data.find_all('div', class_="txt-block")[1]
-      self.country = table_info.find(itemprop="url").text
-
+      info = page_soup.find(class_="subtext")
+      country = info.find(title="See more release dates").text
+      self.country = country.split()[-1]
 
   def __str__(self):
     return (self.rank + self.title + self.year)
@@ -183,7 +180,7 @@ def update_table():
   statement = ''' UPDATE Movies
       SET Title = LTRIM(Title)'''
 
-  statement2 = '''UPDATE Movies
+  statement2 = '''UPDATE Movie_Info
     SET Length = LTRIM(RTRIM(Length))'''
   cur.execute(statement)
   cur.execute(statement2)
@@ -200,7 +197,6 @@ def update_table():
   conn.commit()
   conn.close()
 
-
-
-create_table()
-update_table()
+# 
+# create_table()
+# update_table()
