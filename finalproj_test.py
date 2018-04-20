@@ -74,6 +74,14 @@ class TestDatabase(unittest.TestCase):
         results_list2 = results2.fetchone()
         self.assertEqual(type(results_list2), tuple)
 
+    def test_info(self):
+        conn = sqlite3.connect('movies.db')
+        cur = conn.cursor()
+        statement = 'SELECT Country FROM Movie_Info WHERE Country = "(USA)"'
+        results = cur.execute(statement)
+        result_list = results.fetchall()
+        self.assertEqual(len(result_list), 203)
+
 #tests storage of the data
 class TestStorage(unittest.TestCase):
     def test_data_storage(self):
